@@ -12,7 +12,7 @@ int main()
 {
     gmsh::initialize();
     gmsh::option::setNumber("General.Terminal", 1);
-    gmsh::option::setNumber("Mesh.MshFileVersion", 2.2);
+    // gmsh::option::setNumber("Mesh.MshFileVersion", 2.2);
     gmsh::model::add("NACA0012_farfield");
 
     std::vector<Point2D> upper = {
