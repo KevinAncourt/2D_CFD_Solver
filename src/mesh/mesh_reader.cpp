@@ -10,21 +10,10 @@ MeshReader::MeshReader(const std::string& filename)
     filename_ = filename;
 }
 
-void MeshReader::read()
+void MeshReader::read_node(std::ifstream& file)
 {
-    std::ifstream file(filename_);  
-
-    if (!file)
-    {
-        std::cerr << "Error : Can't open Mesh " << filename_ << std::endl;
-        return;
-    }
-
-    std::cout << "Mesh Open : " << filename_ << std::endl;
-
     std::string line;
-
-     while (std::getline(file, line))
+    while (std::getline(file, line))
     {
         if (line == "$Nodes")
         {
@@ -97,10 +86,24 @@ void MeshReader::read()
 
             std::cout << "Nodes finished" << std::endl;
                         
-        } 
-        
-        
+        }         
     }
+}
+
+
+void MeshReader::read()
+{
+    std::ifstream file(filename_);  
+
+    if (!file)
+    {
+        std::cerr << "Error : Can't open Mesh " << filename_ << std::endl;
+        return;
+    }
+
+    std::cout << "Mesh Open : " << filename_ << std::endl;
+    MeshReader::read_node(file);
+
     for (int i = 0; i < 10; i++)
     {
         std::cout << "local = " << i
@@ -109,5 +112,8 @@ void MeshReader::read()
               << " y = " << CoordY[i]
               << " z = " << CoordZ[i]
               << std::endl;
-    }
+    }  
+
+
+    
 }

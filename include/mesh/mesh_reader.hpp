@@ -7,6 +7,7 @@ class MeshReader
 {
 public:
     MeshReader(const std::string& filename);
+    void read_node(std::ifstream& file);
     void read();
 
 
