@@ -13,81 +13,172 @@ MeshReader::MeshReader(const std::string& filename)
 void MeshReader::read_node(std::ifstream& file)
 {
     std::string line;
-    while (std::getline(file, line))
+    
+    std::getline(file, line);
+
+    std::istringstream iss(line);
+
+    int numEntityBlocks;
+    int numNodes;
+    int minNodeTag;
+    int maxNodeTag;
+
+    iss >> numEntityBlocks >> numNodes >> minNodeTag >> maxNodeTag;
+
+    std::cout << "numEntityBlocks = " << numEntityBlocks << std::endl;
+    std::cout << "numNodes        = " << numNodes << std::endl;
+    std::cout << "minNodeTag      = " << minNodeTag << std::endl;
+    std::cout << "maxNodeTag      = " << maxNodeTag << std::endl;
+
+    CoordX.resize(numNodes);
+    CoordY.resize(numNodes);
+    CoordZ.resize(numNodes);
+    lntogn.resize(numNodes);
+    gntoln.resize(maxNodeTag + 1, -1);
+
+    int localIndex = 0;
+
+    for (int b = 0; b < numEntityBlocks; b++)
     {
-        if (line == "$Nodes")
+        std::getline(file, line);
+        std::istringstream blockHeader(line); // Convert the line into an input stream to extract values easily
+ 
+        int entityDim;
+        int entityTag;
+        int parametric;
+        int numNodesInBlock;
+
+        blockHeader >> entityDim >> entityTag >> parametric >> numNodesInBlock;
+
+        std::vector<int> nodeTags(numNodesInBlock);
+
+        for (int i = 0; i < numNodesInBlock; i++)
         {
             std::getline(file, line);
+            nodeTags[i] = std::stoi(line); // Convert the string line into an integer
+        }
 
-            std::istringstream iss(line);
+        for (int i = 0; i < numNodesInBlock; i++)
+        {
+            std::getline(file, line);
+            std::istringstream coordStream(line);
 
-            int numEntityBlocks;
-            int numNodes;
-            int minNodeTag;
-            int maxNodeTag;
+            double x, y, z;
+            coordStream >> x >> y >> z;
 
-            iss >> numEntityBlocks >> numNodes >> minNodeTag >> maxNodeTag;
+            int nodeTag = nodeTags[i];
 
-            std::cout << "numEntityBlocks = " << numEntityBlocks << std::endl;
-            std::cout << "numNodes        = " << numNodes << std::endl;
-            std::cout << "minNodeTag      = " << minNodeTag << std::endl;
-            std::cout << "maxNodeTag      = " << maxNodeTag << std::endl;
+            CoordX[localIndex] = x;
+            CoordY[localIndex] = y;
+            CoordZ[localIndex] = z;
 
-            CoordX.resize(numNodes);
-            CoordY.resize(numNodes);
-            CoordZ.resize(numNodes);
-            lntogn.resize(numNodes);
-            gntoln.resize(maxNodeTag + 1, -1);
+            lntogn[localIndex] = nodeTag;
+            gntoln[nodeTag] = localIndex;
 
-            int localIndex = 0;
+            localIndex++;
+        }
+    }
 
-            for (int b = 0; b < numEntityBlocks; b++)
+    std::getline(file, line); // read $EndNodes
+
+    std::cout << "Nodes finished" << std::endl;
+                                
+}
+
+
+void MeshReader::read_element(std::ifstream& file)
+{
+    std::string line;
+
+    // Read the global header of the Elements section
+    std::getline(file, line);
+    std::istringstream iss(line);
+
+    int numEntityBlocks;
+    int numElements;
+    int minElementTag;
+    int maxElementTag;
+
+    iss >> numEntityBlocks >> numElements >> minElementTag >> maxElementTag;
+
+    for (int iblock = 0; iblock < numEntityBlocks; iblock++)
+    {
+        // Read block header:
+        std::getline(file, line);
+        std::istringstream blockHeader(line);
+
+        int entityDim;
+        int entityTag;
+        int elementType;
+        int numElementsInBlock;
+
+        blockHeader >> entityDim >> entityTag >> elementType >> numElementsInBlock;
+
+        // Case 1: boundary edges (segments)
+        if (entityDim == 1 && elementType == 1)
+        {
+            for (int ielem = 0; ielem < numElementsInBlock; ielem++)
             {
                 std::getline(file, line);
-                std::istringstream blockHeader(line); // Convert the line into an input stream to extract values easily
- 
-                int entityDim;
-                int entityTag;
-                int parametric;
-                int numNodesInBlock;
+                std::istringstream elemStream(line);
 
-                blockHeader >> entityDim >> entityTag >> parametric >> numNodesInBlock;
+                int elementTag;
+                int n1_gmsh;
+                int n2_gmsh;
 
-                std::vector<int> nodeTags(numNodesInBlock);
+                elemStream >> elementTag >> n1_gmsh >> n2_gmsh;
 
-                for (int i = 0; i < numNodesInBlock; i++)
+                // Convert Gmsh node tags to local node indices
+                int n1 = gntoln[n1_gmsh];
+                int n2 = gntoln[n2_gmsh];
+
+                // entityTag 1,2,3 -> Wall 
+                // entityTag 5,6,7,8 -> Farfield only for the naca0012 case TODO find a way to make it works for every cases
+                if (entityTag == 1 || entityTag == 2 || entityTag == 3)
                 {
-                    std::getline(file, line);
-                    nodeTags[i] = std::stoi(line); // Convert the string line into an integer
+                    edgebcwall.push_back({n1, n2});
                 }
-
-                for (int i = 0; i < numNodesInBlock; i++)
+                else if (entityTag == 5 || entityTag == 6 || entityTag == 7 || entityTag == 8)
                 {
-                    std::getline(file, line);
-                    std::istringstream coordStream(line);
-
-                    double x, y, z;
-                    coordStream >> x >> y >> z;
-
-                    int nodeTag = nodeTags[i];
-
-                    CoordX[localIndex] = x;
-                    CoordY[localIndex] = y;
-                    CoordZ[localIndex] = z;
-
-                    lntogn[localIndex] = nodeTag;
-                    gntoln[nodeTag] = localIndex;
-
-                    localIndex++;
+                    edgebcfarfield.push_back({n1, n2});
                 }
             }
+        }
+        // Case 2: fluid cells (triangles)
+        else if (entityDim == 2 && elementType == 2)
+        {
+            for (int ielem = 0; ielem < numElementsInBlock; ielem++)
+            {
+                std::getline(file, line);
+                std::istringstream elemStream(line);
 
-            std::getline(file, line); // lit $EndNodes
+                int elementTag;
+                int n1_gmsh;
+                int n2_gmsh;
+                int n3_gmsh;
 
-            std::cout << "Nodes finished" << std::endl;
-                        
-        }         
+                elemStream >> elementTag >> n1_gmsh >> n2_gmsh >> n3_gmsh;
+
+                // Convert Gmsh node tags to local node indices
+                int n1 = gntoln[n1_gmsh];
+                int n2 = gntoln[n2_gmsh];
+                int n3 = gntoln[n3_gmsh];
+
+                triangles.push_back({n1, n2, n3});
+            }
+        }
+        // Other element types are ignored for now
+        else
+        {
+            for (int ielem = 0; ielem < numElementsInBlock; ielem++)
+            {
+                std::getline(file, line);
+            }
+        }
     }
+    std::getline(file, line); // read $EndElements
+    std::cout << "Elements finished" << std::endl;
+
 }
 
 
@@ -100,20 +191,33 @@ void MeshReader::read()
         std::cerr << "Error : Can't open Mesh " << filename_ << std::endl;
         return;
     }
+    std::string line;
 
     std::cout << "Mesh Open : " << filename_ << std::endl;
-    MeshReader::read_node(file);
-
-    for (int i = 0; i < 10; i++)
+    while (std::getline(file, line))
     {
-        std::cout << "local = " << i
+        if (line == "$Nodes")
+        {
+        MeshReader::read_node(file);
+        }
+
+        if (line == "$Elements")
+        {
+        MeshReader::read_element(file);
+        }
+        
+    }
+
+    for (int i = 0; i < 5; i++)
+    {
+    std::cout << "local = " << i
               << " gmsh = " << lntogn[i]
               << " x = " << CoordX[i]
               << " y = " << CoordY[i]
               << " z = " << CoordZ[i]
+              << " BC Wall = (" << edgebcwall[i][0] << ", " << edgebcwall[i][1] << ")"
+              << " BC Farfield = (" << edgebcfarfield[i][0] << ", " << edgebcfarfield[i][1] << ")"
+              << " Triangle = (" << triangles[i][0] << ", " << triangles[i][1] << ", " << triangles[i][2] << ")"
               << std::endl;
-    }  
-
-
-    
+    } 
 }
