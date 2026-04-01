@@ -85,7 +85,6 @@ void MeshReader::read_node(std::ifstream& file)
                                 
 }
 
-
 void MeshReader::read_element(std::ifstream& file)
 {
     std::string line;
@@ -181,6 +180,109 @@ void MeshReader::read_element(std::ifstream& file)
 
 }
 
+void MeshReader::write_vtk(const std::string& filename) const
+{
+    std::ofstream out(filename);
+
+    if (!out)
+    {
+        std::cerr << "Error: cannot open " << filename << std::endl;
+        return;
+    }
+
+    int numPoints = CoordX.size();
+    int numTriangles = triangles.size();
+
+    out << "# vtk DataFile Version 2.0\n";
+    out << "Mesh exported from MeshReader\n";
+    out << "ASCII\n";
+    out << "DATASET UNSTRUCTURED_GRID\n";
+
+    // Points
+    out << "POINTS " << numPoints << " float\n";
+    for (int i = 0; i < numPoints; i++)
+    {
+        out << CoordX[i] << " " << CoordY[i] << " " << CoordZ[i] << "\n";
+    }
+
+    // Cells
+    out << "\nCELLS " << numTriangles << " " << 4 * numTriangles << "\n";
+    for (int i = 0; i < numTriangles; i++)
+    {
+        out << "3 "
+            << triangles[i][0] << " "
+            << triangles[i][1] << " "
+            << triangles[i][2] << "\n";
+    }
+
+    // Cell types
+    out << "\nCELL_TYPES " << numTriangles << "\n";
+    for (int i = 0; i < numTriangles; i++)
+    {
+        out << "5\n"; // VTK_TRIANGLE
+    }
+
+    out.close();
+
+    std::cout << "VTK file written: " << filename << std::endl;
+}
+
+void MeshReader::write_vtk_edges(const std::string& filename,
+                                 const std::vector<std::array<int,2>>& edges) const
+{
+    std::ofstream out(filename);
+
+    if (!out)
+    {
+        std::cerr << "Error: cannot open " << filename << std::endl;
+        return;
+    }
+
+    int numPoints = CoordX.size();
+    int numEdges  = edges.size();
+
+    out << "# vtk DataFile Version 2.0\n";
+    out << "Edges\n";
+    out << "ASCII\n";
+    out << "DATASET UNSTRUCTURED_GRID\n";
+
+    // Points
+    out << "POINTS " << numPoints << " float\n";
+    for (int i = 0; i < numPoints; i++)
+    {
+        out << CoordX[i] << " " << CoordY[i] << " " << CoordZ[i] << "\n";
+    }
+
+    // Cells
+    out << "\nCELLS " << numEdges << " " << 3 * numEdges << "\n";
+    for (int i = 0; i < numEdges; i++)
+    {
+        out << "2 "
+            << edges[i][0] << " "
+            << edges[i][1] << "\n";
+    }
+
+    // Types
+    out << "\nCELL_TYPES " << numEdges << "\n";
+    for (int i = 0; i < numEdges; i++)
+    {
+        out << "3\n"; // VTK_LINE
+    }
+
+    out.close();
+
+    std::cout << "VTK edges written: " << filename << std::endl;
+}
+
+void MeshReader::write_vtk_wall(const std::string& filename) const
+{
+    write_vtk_edges(filename, edgebcwall);
+}
+
+void MeshReader::write_vtk_farfield(const std::string& filename) const
+{
+    write_vtk_edges(filename, edgebcfarfield);
+}
 
 void MeshReader::read()
 {
@@ -207,17 +309,4 @@ void MeshReader::read()
         }
         
     }
-
-    for (int i = 0; i < 5; i++)
-    {
-    std::cout << "local = " << i
-              << " gmsh = " << lntogn[i]
-              << " x = " << CoordX[i]
-              << " y = " << CoordY[i]
-              << " z = " << CoordZ[i]
-              << " BC Wall = (" << edgebcwall[i][0] << ", " << edgebcwall[i][1] << ")"
-              << " BC Farfield = (" << edgebcfarfield[i][0] << ", " << edgebcfarfield[i][1] << ")"
-              << " Triangle = (" << triangles[i][0] << ", " << triangles[i][1] << ", " << triangles[i][2] << ")"
-              << std::endl;
-    } 
 }

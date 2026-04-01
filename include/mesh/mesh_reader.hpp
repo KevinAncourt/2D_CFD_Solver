@@ -10,6 +10,9 @@ public:
     MeshReader(const std::string& filename);
     void read_node(std::ifstream& file);
     void read_element(std::ifstream& file);
+    void write_vtk(const std::string& filename) const;
+    void write_vtk_wall(const std::string& filename) const;
+    void write_vtk_farfield(const std::string& filename) const;
     void read();
 
 
@@ -23,4 +26,6 @@ private :
     std::vector<std::array<int, 2>> edgebcwall;
     std::vector<std::array<int, 2>> edgebcfarfield;
     std::vector<std::array<int, 3>> triangles;
+
+    void write_vtk_edges(const std::string& filename,const std::vector<std::array<int,2>>& edges) const;
 };
