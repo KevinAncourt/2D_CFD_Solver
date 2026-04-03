@@ -310,3 +310,34 @@ void MeshReader::read()
         
     }
 }
+
+const std::vector<double>& MeshReader::get_CoordX() const
+{
+    return CoordX;
+}
+
+const std::vector<double>& MeshReader::get_CoordY() const
+{
+    return CoordY;
+}
+
+const std::vector<double>& MeshReader::get_CoordZ() const
+{
+    return CoordZ;
+}
+
+const std::vector<std::array<int, 3>>& MeshReader::get_Triangles() const
+{
+    return triangles;
+}
+
+const std::vector<std::array<int, 2>>& MeshReader::get_BdryNodes_farfield() const
+{
+    return edgebcfarfield;
+}
+
+const std::vector<std::array<int, 2>>& MeshReader::get_BdryNodes_wall() const
+{
+    return edgebcwall;
+}
+

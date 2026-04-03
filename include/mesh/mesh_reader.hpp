@@ -14,6 +14,13 @@ public:
     void write_vtk_wall(const std::string& filename) const;
     void write_vtk_farfield(const std::string& filename) const;
     void read();
+    
+    const std::vector<double>& get_CoordX() const;
+    const std::vector<double>& get_CoordY() const;
+    const std::vector<double>& get_CoordZ() const;
+    const std::vector<std::array<int, 3>>& get_Triangles() const;
+    const std::vector<std::array<int, 2>>& get_BdryNodes_farfield() const;
+    const std::vector<std::array<int, 2>>& get_BdryNodes_wall() const;
 
 
 private : 

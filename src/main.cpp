@@ -10,7 +10,7 @@ int main()
     mesh.write_vtk("../output/mesh.vtk");
     mesh.write_vtk_wall("../output/wall.vtk");
     mesh.write_vtk_farfield("../output/farfield.vtk");
-    
+
     return 0;
 
 }
