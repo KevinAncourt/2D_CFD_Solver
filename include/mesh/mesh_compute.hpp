@@ -7,6 +7,7 @@ class MeshCompute {
 public:
     MeshCompute(const MeshReader& reader); 
     void compute_center_cells();
+    void compute_cells_area();
 
 
 private:
@@ -14,6 +15,8 @@ private:
     std::vector<double> centercells_X;
     std::vector<double> centercells_Y;
     std::vector<double> centercells_Z;
+    std::vector<double> cellsarea;
+
     
 
 
