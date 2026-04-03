@@ -3,6 +3,9 @@
 #include <string>
 #include <vector>
 #include <array>
+#include <iostream>
+#include <fstream>
+#include <sstream>
 
 class MeshReader
 {

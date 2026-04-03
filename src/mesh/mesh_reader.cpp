@@ -1,8 +1,4 @@
 #include "mesh/mesh_reader.hpp"
-#include <iostream>
-#include <fstream>
-#include <sstream>
-
 
 
 MeshReader::MeshReader(const std::string& filename)
