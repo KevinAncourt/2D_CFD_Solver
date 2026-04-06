@@ -13,6 +13,8 @@ int main()
     mesh.write_vtk_farfield("../output/farfield.vtk");
     meshcompute.compute_center_cells();
     meshcompute.compute_cells_area();
+    meshcompute.compute_faces();
+    meshcompute.orient_faces();
     return 0;
 
 }
