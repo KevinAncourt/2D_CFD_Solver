@@ -10,6 +10,7 @@ public:
     void compute_cells_area();
     void compute_faces();
     void orient_faces();
+    void compute_faces_bc_type();
 
 
 
@@ -21,11 +22,13 @@ private:
     std::vector<double> cellsarea;
     std::vector<std::array<int,2>> faces_nodes;   // Faces nodes
     std::vector<std::array<int,2>> faces_cells;   // Left and right cells 
+    std::vector<std::array<int,3>> cells_faces;   // For each triangle, we got faces index
     std::vector<double> faces_center_x;
     std::vector<double> faces_center_y;
     std::vector<double> faces_normal_x;
     std::vector<double> faces_normal_y;
     std::vector<double> faces_length;
+    std::vector<int> faces_bc_type;
 
     
 

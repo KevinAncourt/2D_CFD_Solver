@@ -327,12 +327,12 @@ const std::vector<std::array<int, 3>>& MeshReader::get_Triangles() const
     return triangles;
 }
 
-const std::vector<std::array<int, 2>>& MeshReader::get_BdryNodes_farfield() const
+const std::vector<std::array<int, 2>>& MeshReader::get_BdryEdges_farfield() const
 {
     return edgebcfarfield;
 }
 
-const std::vector<std::array<int, 2>>& MeshReader::get_BdryNodes_wall() const
+const std::vector<std::array<int, 2>>& MeshReader::get_BdryEdges_wall() const
 {
     return edgebcwall;
 }

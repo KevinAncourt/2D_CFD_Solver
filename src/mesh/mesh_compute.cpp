@@ -79,6 +79,9 @@ void MeshCompute::compute_faces()
     faces_length.clear();
     faces_normal_x.clear();
     faces_normal_y.clear();
+    cells_faces.clear();
+    cells_faces.resize(T.size());
+    
 
     std::unordered_map<long long, int> face_map;
 
@@ -89,7 +92,7 @@ void MeshCompute::compute_faces()
         int n2 = T[cell][2];
 
         // Each loop we build all faces possible for the triangle
-        std::array<std::array<int,2>,3> cell_faces = {{
+        std::array<std::array<int,2>,3> local_edges = {{
             {n0, n1},
             {n1, n2},
             {n2, n0}
@@ -98,8 +101,8 @@ void MeshCompute::compute_faces()
         // We sort each face to avoid dupes
         for (int k = 0; k < 3; k++)
         {
-            int a = cell_faces[k][0];
-            int b = cell_faces[k][1];
+            int a = local_edges[k][0];
+            int b = local_edges[k][1];
 
             int i, j;
 
@@ -122,6 +125,8 @@ void MeshCompute::compute_faces()
             {
                 // if the face is not already in the map we add it 
                 int face_id = static_cast<int>(faces_nodes.size());
+
+                cells_faces[cell][k] = face_id;
 
                 face_map[key] = face_id;
 
@@ -160,6 +165,7 @@ void MeshCompute::compute_faces()
                 // if the face is already in the map we add a right cell only
                 int face_id = it->second;
                 faces_cells[face_id][1] = cell;
+                cells_faces[cell][k] = face_id;
             }
         }
     }
@@ -213,3 +219,115 @@ void MeshCompute::orient_faces()
     
 }
 
+void MeshCompute::compute_faces_bc_type()
+{
+    const auto& X = reader_.get_CoordX();
+    const auto& Y = reader_.get_CoordY();
+
+    const auto& wall_edges = reader_.get_BdryEdges_wall();
+    const auto& farfield_edges = reader_.get_BdryEdges_farfield();
+
+    faces_bc_type.clear();
+    faces_bc_type.resize(faces_nodes.size(), 0);
+
+    double tol = 1e-12;
+
+    for (size_t f = 0; f < faces_nodes.size(); f++)
+    {
+        // 0 = internal
+        // 1 = wall
+        // 2 = farfield
+
+        if (faces_cells[f][1] != -1)
+        {
+            faces_bc_type[f] = 0;
+            continue;
+        }
+
+        int a = faces_nodes[f][0];
+        int b = faces_nodes[f][1];
+
+        double xa = X[a];
+        double ya = Y[a];
+        double xb = X[b];
+        double yb = Y[b];
+
+        bool found = false;
+
+        // Check wall edges
+        for (size_t i = 0; i < wall_edges.size(); i++)
+        {
+            int c = wall_edges[i][0];
+            int d = wall_edges[i][1];
+
+            double xc = X[c];
+            double yc = Y[c];
+            double xd = X[d];
+            double yd = Y[d];
+
+            bool same_order =
+                std::abs(xa - xc) < tol &&
+                std::abs(ya - yc) < tol &&
+                std::abs(xb - xd) < tol &&
+                std::abs(yb - yd) < tol;
+
+            bool reverse_order =
+                std::abs(xa - xd) < tol &&
+                std::abs(ya - yd) < tol &&
+                std::abs(xb - xc) < tol &&
+                std::abs(yb - yc) < tol;
+
+            if (same_order || reverse_order)
+            {
+                faces_bc_type[f] = 1;
+                found = true;
+                break;
+            }
+        }
+
+        if (found)
+        {
+            continue;
+        }
+
+        // Check farfield edges
+        for (size_t i = 0; i < farfield_edges.size(); i++)
+        {
+            int c = farfield_edges[i][0];
+            int d = farfield_edges[i][1];
+
+            double xc = X[c];
+            double yc = Y[c];
+            double xd = X[d];
+            double yd = Y[d];
+
+            bool same_order =
+                std::abs(xa - xc) < tol &&
+                std::abs(ya - yc) < tol &&
+                std::abs(xb - xd) < tol &&
+                std::abs(yb - yd) < tol;
+
+            bool reverse_order =
+                std::abs(xa - xd) < tol &&
+                std::abs(ya - yd) < tol &&
+                std::abs(xb - xc) < tol &&
+                std::abs(yb - yc) < tol;
+
+            if (same_order || reverse_order)
+            {
+                faces_bc_type[f] = 2;
+                found = true;
+                break;
+            }
+        }
+
+        if (!found)
+        {
+            std::cerr << "Warning: boundary face " << f
+                      << " with nodes (" << a << ", " << b
+                      << ") was not matched to any BC type." << std::endl;
+        }
+    }
+
+    std::cout << "Face BC types computed" << std::endl;
+}

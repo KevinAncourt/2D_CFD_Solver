@@ -15,6 +15,7 @@ int main()
     meshcompute.compute_cells_area();
     meshcompute.compute_faces();
     meshcompute.orient_faces();
+    meshcompute.compute_faces_bc_type();
     return 0;
 
 }
