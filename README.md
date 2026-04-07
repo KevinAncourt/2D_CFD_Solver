@@ -1,383 +1,171 @@
-# 2D CFD Solver
+# 2D Euler CFD Solver (Prototype)
 
-> A personal **prototype** 2D CFD solver in C++ for the **compressible Euler equations** on **unstructured triangular meshes**, using a **cell-centered finite-volume** formulation.
+## 📌 Overview
 
-![Status](https://img.shields.io/badge/status-prototype-orange)
-![Language](https://img.shields.io/badge/language-C%2B%2B17-blue)
-![Build](https://img.shields.io/badge/build-CMake-brightgreen)
-![Mesh](https://img.shields.io/badge/mesh-Gmsh%204.1-informational)
+This project is a **2D finite volume solver for compressible Euler equations** on unstructured triangular meshes.
 
----
+It is developed as a **personal prototype** to better understand and implement:
+- Numerical methods for CFD
+- Unstructured mesh handling
+- Flux-based finite volume schemes
 
-## Overview
-
-This repository is a **personal development project** whose goal is to progressively build the core ingredients of a 2D CFD solver from scratch:
-
-- Gmsh mesh reading
-- compact local indexing
-- face and connectivity reconstruction
-- geometric preprocessing
-- Euler physics utilities
-- numerical flux computation
-- boundary-condition handling
-- local CFL time stepping
-- explicit pseudo-time marching
-- VTK output for ParaView post-processing
-
-The current codebase is intentionally simple and readable. It should be viewed as a **prototype for learning, validation, and progressive extension**, not as a production-ready or industrial CFD code.
+> ⚠️ This is a **prototype / research-oriented code**, not a production-ready solver.
 
 ---
 
-## Current Features
+## ✨ Features
 
-The solver already supports:
-
-- reading **Gmsh 4.1** `.msh` files,
-- converting Gmsh node tags to **compact local indices**,
-- extracting **fluid triangles** and selected **boundary edges**,
-- reconstructing **unique mesh faces** from cell connectivity,
-- computing:
-  - cell centers,
-  - cell areas,
-  - face centers,
-  - face lengths,
-  - face normals,
-- orienting face normals consistently from **left cell** to **right cell**,
-- solving the **2D compressible Euler equations**,
-- using a **Rusanov** numerical flux,
-- applying:
-  - a **slip wall** boundary condition,
-  - a simple **farfield** boundary condition,
-- advancing the solution with an **explicit local-CFL scheme**,
-- exporting mesh and solution fields to **VTK** for visualization in **ParaView**.
+- Finite Volume Method (cell-centered)
+- Unstructured triangular mesh (Gmsh)
+- Euler equations (compressible flow)
+- Rusanov (local Lax-Friedrichs) flux
+- Local time stepping (CFL-based)
+- Boundary conditions:
+  - Slip wall (Euler wall)
+  - Farfield (freestream state)
+- VTK output (ParaView visualization)
 
 ---
 
-## Project Status
+## 🧮 Governing Equations
 
-This project is currently at the stage of a **working prototype**.
+The solver uses the **2D compressible Euler equations** in conservative form:
 
-### What it is
+```
+W = [ rho, rho*u, rho*v, rho*E ]
+```
 
-- a clean starting point for a custom CFD solver,
-- a testbed for numerical methods,
-- a personal codebase to better understand solver architecture and implementation details.
+### Pressure relation
 
-### What it is not
+![pressure](https://latex.codecogs.com/png.latex?p%20%3D%20(%5Cgamma%20-%201)(%5Crho%20E%20-%200.5%5Crho(u%5E2%2Bv%5E2)))
 
-- a production solver,
-- a fully verified and validated research code,
-- an optimized HPC implementation,
-- a complete Navier–Stokes framework.
+### Flux projected along a normal
 
----
-
-## Numerical Model
-
-The solver works with the conservative state vector
-
-\[
-W =
-\begin{pmatrix}
-\rho \\
-\rho u \\
-\rho v \\
-\rho E
-\end{pmatrix}
-\]
-
-where:
-
-- \(\rho\) is the density,
-- \(u, v\) are the velocity components,
-- \(E\) is the total specific energy.
-
-The pressure is recovered from the perfect-gas equation of state:
-
-\[
-p = (\gamma - 1)\left(\rho E - \frac{1}{2}\rho(u^2+v^2)\right)
-\]
-
-The physical flux projected onto a unit normal \(\mathbf{n} = (n_x,n_y)\) is:
-
-\[
-F(W)\cdot \mathbf{n} =
-\begin{pmatrix}
-\rho u_n \\
-\rho u u_n + p n_x \\
-\rho v u_n + p n_y \\
-(\rho E + p)u_n
-\end{pmatrix}
-\]
-
-with
-
-\[
-u_n = u n_x + v n_y
-\]
-
-The internal numerical flux currently used is the **Rusanov flux**:
-
-\[
-\hat{F}(W_L, W_R)
-= \frac{1}{2}\left(F(W_L)+F(W_R)\right)\cdot \mathbf{n}
-- \frac{1}{2}s_{\max}(W_R-W_L)
-\]
-
-where
-
-\[
-s_{\max} = \max\left(|u_{n,L}| + a_L,\; |u_{n,R}| + a_R\right)
-\]
-
-and \(a = \sqrt{\gamma p/\rho}\) is the sound speed.
-
-The explicit update is written as
-
-\[
-W_i^{n+1} = W_i^n - \frac{\Delta t_i}{|\Omega_i|} R_i
-\]
-
-with \(|\Omega_i|\) the cell area and \(R_i\) the sum of fluxes over the cell faces.
-
-The local pseudo-time step is computed from a CFL estimate:
-
-\[
-\Delta t_i = \mathrm{CFL}\,\frac{|\Omega_i|}{\sum_f \lambda_f}
-\]
-
-where each \(\lambda_f\) is based on a local estimate of \(|u_n| + a\).
+![flux](https://latex.codecogs.com/png.latex?F(W)%20%5Ccdot%20n%20%3D%20%5Cbegin%7Bpmatrix%7D%20%5Crho%20u_n%20%5C%5C%20%5Crho%20u%20u_n%20%2B%20p%20n_x%20%5C%5C%20%5Crho%20v%20u_n%20%2B%20p%20n_y%20%5C%5C%20(%5Crho%20E%20%2B%20p)%20u_n%20%5Cend%7Bpmatrix%7D)
 
 ---
 
-## Boundary Conditions
+## 🔢 Numerical Method
 
-### Slip Wall
+### Finite Volume formulation
 
-The wall boundary condition currently implemented is an **inviscid slip wall**.
+```
+W_i^{n+1} = W_i^n - (dt / |Omega_i|) * sum(F_faces)
+```
 
-At the wall, there is:
+### Numerical flux
 
-- **no mass flux** through the boundary,
-- **no energy flux** through the boundary,
-- only the **pressure force normal to the wall**.
+The solver uses a **Rusanov (local Lax-Friedrichs) flux**:
 
-This leads to the wall flux
+![rusanov](https://latex.codecogs.com/png.latex?F%5E%7B*%7D%20%3D%200.5(F_L%20%2B%20F_R)%20-%200.5%20s_%7Bmax%7D%20(W_R%20-%20W_L))
 
-\[
-\Phi_{\text{wall}} =
-\begin{pmatrix}
-0 \\
-p n_x S_f \\
-p n_y S_f \\
-0
-\end{pmatrix}
-\]
+---
 
-where \(S_f\) is the face length.
+## 🧱 Mesh Handling
+
+- Mesh generated with **Gmsh**
+- Read from `.msh` (v4.1 format)
+- Internal representation:
+  - Node coordinates: `CoordX`, `CoordY`, `CoordZ`
+  - Triangle connectivity
+  - Face reconstruction from elements
+- Face-based data:
+  - Normals
+  - Areas
+  - Left/right cells
+
+---
+
+## 🌊 Boundary Conditions
+
+### Wall (slip condition)
+
+- No mass flux
+- No energy flux
+- Only pressure force
+
+![wall](https://latex.codecogs.com/png.latex?F_%7Bwall%7D%20%3D%20%5B0%2C%20p%20n_x%2C%20p%20n_y%2C%200%5D)
 
 ### Farfield
 
-The farfield boundary condition is currently implemented in a simple way by computing a numerical flux between:
-
-- the internal cell state,
-- a prescribed freestream state.
-
-This is appropriate for a prototype, although it is not yet a full characteristic farfield treatment.
+- Imposed freestream state
+- Computed using Rusanov flux between:
+  - Internal state
+  - Freestream state
 
 ---
 
-## Repository Structure
+## ▶️ How to Run
 
-```text
-2D_CFD_Solver/
-├── CMakeLists.txt
-├── README.md
-├── include/
-│   ├── bc/
-│   │   └── boundary_conditions.hpp
-│   ├── flux/
-│   │   └── rusanov_flux.hpp
-│   ├── mesh/
-│   │   ├── mesh_compute.hpp
-│   │   └── mesh_reader.hpp
-│   ├── physics/
-│   │   └── euler_physics.hpp
-│   └── solver/
-│       └── solver.hpp
-├── src/
-│   ├── bc/
-│   │   └── boundary_conditions.cpp
-│   ├── flux/
-│   │   └── rusanov_flux.cpp
-│   ├── mesh/
-│   │   ├── mesh_compute.cpp
-│   │   └── mesh_reader.cpp
-│   ├── physics/
-│   │   └── euler_physics.cpp
-│   ├── solver/
-│   │   └── solver.cpp
-│   └── main.cpp
-├── mesh_generation/
-│   ├── msh/
-│   │   └── naca0012_farfield150.msh
-│   └── script/
-│       └── naca0012.cpp
-├── output/
-│   ├── mesh.vtk
-│   ├── wall.vtk
-│   ├── farfield.vtk
-│   ├── normals.vtk
-│   └── normals_boundary.vtk
-└── build/
-```
-
----
-
-## Main Components
-
-### `MeshReader`
-Reads the Gmsh mesh and stores data in contiguous arrays:
-
-- nodal coordinates,
-- fluid triangles,
-- selected boundary edges,
-- Gmsh-to-local index mappings.
-
-### `MeshCompute`
-Builds all geometric quantities required by the solver:
-
-- cell centers,
-- cell areas,
-- unique faces,
-- left/right cell connectivity,
-- oriented normals,
-- boundary face types.
-
-### `EulerPhysics`
-Provides the main physical building blocks:
-
-- conservative/primitive conversions,
-- pressure,
-- sound speed,
-- physical flux.
-
-### `RusanovFlux`
-Computes the numerical flux at internal interfaces and for the simple farfield treatment.
-
-### `BoundaryConditions`
-Applies the current boundary-condition models:
-
-- inviscid slip wall,
-- simple farfield state.
-
-### `FlowSolver`
-Handles the solution loop:
-
-- initialization,
-- residual assembly,
-- local time-step computation,
-- explicit update,
-- residual monitoring,
-- VTK export.
-
----
-
-## Build
-
-From the project root:
+### 1. Generate mesh
 
 ```bash
-mkdir -p build
-cd build
-cmake ..
-make -j
+cd mesh_generation/script
+g++ naca0012.cpp -o naca0012 -lgmsh
+./naca0012
 ```
 
-The executable is generated in the `build/` directory.
+### 2. Build solver
 
----
+```bash
+mkdir build && cd build
+cmake ..
+make
+```
 
-## Run
-
-From `build/`:
+### 3. Run simulation
 
 ```bash
 ./solver
 ```
 
-The current case configured in `main.cpp` corresponds to a **NACA0012** test case with freestream conditions such as:
+---
 
-- \(\gamma = 1.4\)
-- \(M_\infty = 1.5\)
-- \(\alpha = 1^\circ\)
-- \(\rho_\infty = 1\)
-- \(p_\infty = 1/(\gamma M_\infty^2)\)
+## 📊 Output
 
-The computed solution is exported to a `solution.vtk` file.
+- Results written in `.vtk`
+- Open with **ParaView**
+
+Typical fields:
+- Density
+- Pressure
+- Velocity
+- Mach number
 
 ---
 
-## Post-processing
+## ⚠️ Limitations
 
-The generated VTK files can be visualized in **ParaView**.
-
-Typical exported quantities include:
-
-- mesh geometry,
-- wall and farfield boundaries,
-- density,
-- pressure,
-- velocity vector,
-- velocity magnitude,
-- Mach number.
+- First-order scheme (no MUSCL reconstruction)
+- Diffusive flux (Rusanov)
+- Boundary conditions simplified
+- No viscous terms (Euler only)
+- No parallelization
 
 ---
 
-## Mesh Generation
+## 🚀 Future Improvements
 
-The `mesh_generation/script/` directory contains a C++ script based on the **Gmsh API** to generate a test mesh around a **NACA0012** airfoil with a circular farfield of radius `150`.
-
-At the moment, the mesh reading and boundary identification are still partly tied to this specific case. Future improvements should make:
-
-- boundary-group handling more generic,
-- boundary recognition independent of hard-coded entity tags,
-- multi-case usage cleaner and more modular.
+- MUSCL reconstruction (2nd order)
+- Roe / HLLC flux
+- Better farfield BC (characteristic)
+- Mesh adaptation (goal-oriented 👀)
+- Parallelization (MPI)
 
 ---
 
-## Current Limitations
+## 👨‍🔬 Author
 
-This repository should clearly be viewed as a **prototype**. Current limitations include:
+Kevin Ancourt  
+PhD in Computational Fluid Dynamics  
 
-- only a **Rusanov** flux is implemented,
-- the spatial discretization is currently **first-order**,
-- no **MUSCL** reconstruction,
-- no limiter,
-- no implicit solver,
-- no viscous / Navier–Stokes terms,
-- boundary handling is still partly **case-specific**,
-- robustness near strong shocks is still limited,
-- no automated testing framework,
-- no claim of industrial-grade robustness or HPC optimization.
+Specialized in:
+- Adjoint methods
+- Goal-oriented mesh adaptation
+- High-performance scientific computing
 
 ---
 
-## Possible Roadmap
+## 📜 License
 
-Natural next steps for the project include:
-
-1. making boundary-condition handling more generic,
-2. adding **MUSCL** reconstruction,
-3. introducing limiters,
-4. improving shock robustness,
-5. adding Roe / HLLC for comparison,
-6. implementing an implicit solver,
-7. extending toward Navier–Stokes,
-8. preparing a cleaner architecture for performance and parallelism.
-
----
-
-## Disclaimer
-
-This project is a **personal prototype** intended for solver development, learning, and progressive validation. It is useful as a base for understanding and extending the core pieces of a CFD solver, but it still requires substantial work in robustness, verification, and validation before being considered a reliable research or production tool.
+This project is released for **educational and research purposes**.
