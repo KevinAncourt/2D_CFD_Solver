@@ -12,6 +12,21 @@ public:
     void orient_faces();
     void compute_faces_bc_type();
 
+    const std::vector<double>& get_centercells_X() const;
+    const std::vector<double>& get_centercells_Y() const;
+    const std::vector<double>& get_centercells_Z() const;
+    const std::vector<double>& get_cells_area() const;
+    const std::vector<std::array<int,2>>& get_faces_nodes() const;
+    const std::vector<std::array<int,2>>& get_faces_cells() const;
+    const std::vector<std::array<int,3>>& get_cells_faces() const;
+    const std::vector<double>& get_faces_center_x() const;
+    const std::vector<double>& get_faces_center_y() const;
+    const std::vector<double>& get_faces_normal_x() const;
+    const std::vector<double>& get_faces_normal_y() const;
+    const std::vector<double>& get_faces_length() const;
+    const std::vector<int>& get_faces_bc_type() const;
+    
+
 
 
 private:

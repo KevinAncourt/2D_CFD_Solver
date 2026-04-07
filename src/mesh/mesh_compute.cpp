@@ -331,3 +331,58 @@ void MeshCompute::compute_faces_bc_type()
 
     std::cout << "Face BC types computed" << std::endl;
 }
+
+const std::vector<double>& MeshCompute::get_centercells_X() const
+{
+    return centercells_X;
+}
+
+const std::vector<double>& MeshCompute::get_centercells_Y() const
+{
+    return centercells_Y;
+}
+
+const std::vector<double>& MeshCompute::get_centercells_Z() const
+{
+    return centercells_Z;
+}
+const std::vector<double>& MeshCompute::get_cells_area() const
+{
+    return cellsarea;
+}
+const std::vector<std::array<int,2>>& MeshCompute::get_faces_nodes() const
+{
+    return faces_nodes ;
+}
+const std::vector<std::array<int,2>>& MeshCompute::get_faces_cells() const
+{
+    return faces_cells;
+}
+const std::vector<std::array<int,3>>& MeshCompute::get_cells_faces() const
+{
+    return cells_faces;
+}
+const std::vector<double>& MeshCompute::get_faces_center_x() const
+{
+    return faces_center_x;
+}
+const std::vector<double>& MeshCompute::get_faces_center_y() const
+{
+    return faces_center_y;
+}
+const std::vector<double>& MeshCompute::get_faces_normal_x() const
+{
+    return faces_normal_x;
+}
+const std::vector<double>& MeshCompute::get_faces_normal_y() const
+{
+    return faces_normal_y;
+}
+const std::vector<double>& MeshCompute::get_faces_length() const
+{
+    return faces_length;
+}
+const std::vector<int>& MeshCompute::get_faces_bc_type() const
+{
+    return faces_bc_type;
+}
