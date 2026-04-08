@@ -179,7 +179,7 @@ Overall, this test case shows that the solver is able to recover the main supers
 
 ------------------------------------------------------------------------
 
-## 📈 Example Results (Minf = 1.5, CFL = 0.1)
+## 📈 Example Results (Mach 0.85, AoA = 2°, CFL = 0.5)
 
 ### Solution (Mach number)
 
