@@ -156,7 +156,7 @@ Typical fields: - Density - Pressure - Velocity - Mach number
 ```{=html}
 <p align="center">
 ```
-`<img src="images/solution_M05.png" width="600">`{=html}
+`<img src="M0_5_CFL0_001/Naca12.png" width="600">`{=html}
 ```{=html}
 </p>
 ```
@@ -165,7 +165,7 @@ Typical fields: - Density - Pressure - Velocity - Mach number
 ```{=html}
 <p align="center">
 ```
-`<img src="images/residuals_M05_CFL001.png" width="600">`{=html}
+`<img src="M0_5_CFL0_001/residus.png" width="600">`{=html}
 ```{=html}
 </p>
 ```
