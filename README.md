@@ -145,7 +145,7 @@ Typical fields: - Density - Pressure - Velocity - Mach number
 ### Mesh
 
 <p align="center">
-  <img src="M0_5_CFL0_001/mesh.png" width="300"/>
+  <img src="M1_5_AOA_1_CFL0_5/mesh.png" width="300"/>
 </p>
 
 
@@ -179,6 +179,29 @@ Overall, this test case shows that the solver is able to recover the main supers
 
 ------------------------------------------------------------------------
 
+## 📈 Example Results (Minf = 1.5, CFL = 0.1)
+
+### Solution (Mach number)
+
+<p align="center">
+  <img src="M0_85_AOA_2_CFL0_5/Naca12.png" width="300"/>
+</p>
+
+### Residual history
+
+<p align="center">
+  <img src="M0_85_AOA_2_CFL0_5/residus.png" width="300"/>
+</p>
+
+------------------------------------------------------------------------
+
+## Numerical Behavior (Mach 0.85, AoA = 2°, CFL = 0.5)
+
+The second test case considered is a transonic configuration with freestream conditions \( M_\infty = 0.85 \) and an angle of attack \( \alpha = 2^\circ \). The flow is subsonic in the far field, with acceleration occurring over the curved surfaces of the airfoil. This acceleration leads to the formation of a shock wave on the upper surface (extrados), allowing the locally accelerated flow to decelerate and match the subsonic freestream conditions further downstream.
+
+A second, weaker shock is also present on the lower surface (intrados). The pressure difference between the upper and lower surfaces generates lift in this configuration.
+
+------------------------------------------------------------------------
 ## ⚠️ Limitations
 
 -   First-order scheme (no MUSCL)
