@@ -140,13 +140,56 @@ Typical fields: - Density - Pressure - Velocity - Mach number
 
 ------------------------------------------------------------------------
 
-## 📈 Example Results (Minf = 0.5, CFL = 0.001)
+## 📈 Example Results (Minf = 1.5, CFL = 0.1)
 
 ### Mesh
 
 <p align="center">
   <img src="M0_5_CFL0_001/mesh.png" width="300"/>
 </p>
+
+
+### Solution (Mach number)
+
+<p align="center">
+  <img src="M1_5_AOA_1_CFL0_1/Naca12.png" width="300"/>
+</p>
+
+### Residual history
+
+<p align="center">
+  <img src="M1_5_AOA_1_CFL0_1/residus.png" width="300"/>
+</p>
+
+------------------------------------------------------------------------
+
+## ⚠️ Numerical Behavior
+
+For the supersonic test case ($M_\infty = 1.5$, AoA = $1^\circ$), the solver produces a qualitatively reasonable compressible flow field around the airfoil.
+
+From the present results, the following observations can be made:
+
+- A strong perturbation is visible near the leading edge, consistent with the expected supersonic compression effects.
+- The downstream flow structure is captured qualitatively, but compressible features remain broadly smeared.
+- No sharp shock is clearly resolved in the Mach contours, which indicates significant numerical diffusion.
+- This behavior is expected from the current **first-order finite-volume formulation** combined with a **Rusanov flux**, which is robust but strongly diffusive.
+- The current mesh is sufficient to recover the global flow pattern, but it is likely too coarse to capture thin shock structures accurately with the present scheme.
+- The residual decreases overall, which indicates a stable evolution toward a steady state, but convergence remains relatively slow.
+
+These results should therefore be interpreted as **prototype-level numerical experiments**:
+the solver captures the main qualitative behavior of the flow, but the solution is not yet suitable for high-fidelity shock resolution or quantitative aerodynamic prediction.
+
+Typical sources of limitation at this stage are:
+- first-order spatial accuracy,
+- diffusive Rusanov flux,
+- moderate mesh resolution near compressible structures,
+- simplified boundary-condition treatment.
+
+
+------------------------------------------------------------------------
+
+## 📈 Example Results (Minf = 0.5, CFL = 0.001)
+
 
 
 ### Solution (Mach number)

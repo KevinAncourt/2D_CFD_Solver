@@ -35,7 +35,7 @@ int main()
     double p_inf   = 1.0 / (gamma * mach * mach);
 
     solver.initialize_freestream(rho_inf, u_inf, v_inf, p_inf);
-    solver.run_explicit(100000, 0.001, 1e-10);
+    solver.run_explicit(5000, 0.1, 1e-10);
     // solver.run_rk4(5000, 0.3, 1e-10);
     solver.write_residual_history("../output/residual_history.dat");
     solver.write_solution_vtk("../output/solution.vtk");
