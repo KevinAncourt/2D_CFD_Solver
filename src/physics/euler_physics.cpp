@@ -47,6 +47,11 @@ double EulerPhysics::pressure(const std::array<double,4>& W) const
     double kinetic = 0.5 * rho * (u * u + v * v);
     double p = (gamma_ - 1.0) * (rhoE - kinetic);
 
+    if (p<0.0)
+    {
+        std::cout << "Warning Negative Pressure !" << std::endl;
+    }
+
     return p;
 }
 

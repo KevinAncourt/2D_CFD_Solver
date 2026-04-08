@@ -330,6 +330,17 @@ void MeshCompute::compute_faces_bc_type()
     }
 
     std::cout << "Face BC types computed" << std::endl;
+    int n0=0, n1=0, n2=0, nunknown=0;
+    for (int bc : get_faces_bc_type()) {
+        if (bc==0) n0++;
+        else if (bc==1) n1++;
+        else if (bc==2) n2++;
+        else nunknown++;
+    }
+    std::cout << "BC types: internal=" << n0
+              << " wall=" << n1
+              << " farfield=" << n2
+              << " unknown=" << nunknown << std::endl;
 }
 
 const std::vector<double>& MeshCompute::get_centercells_X() const
@@ -395,4 +406,24 @@ const std::vector<double>& MeshCompute::get_faces_length() const
 const std::vector<int>& MeshCompute::get_faces_bc_type() const
 {
     return faces_bc_type;
+}
+
+const std::vector<double>& MeshCompute::get_CoordX() const
+{
+    return reader_.get_CoordX();
+}
+
+const std::vector<double>& MeshCompute::get_CoordY() const
+{
+    return reader_.get_CoordY();
+}
+
+const std::vector<double>& MeshCompute::get_CoordZ() const
+{
+    return reader_.get_CoordZ();
+}
+
+const std::vector<std::array<int,3>>& MeshCompute::get_Triangles() const
+{
+    return reader_.get_Triangles();
 }

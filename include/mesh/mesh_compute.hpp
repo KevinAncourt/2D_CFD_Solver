@@ -25,7 +25,10 @@ public:
     const std::vector<double>& get_faces_normal_y() const;
     const std::vector<double>& get_faces_length() const;
     const std::vector<int>& get_faces_bc_type() const;
-    
+    const std::vector<double>& get_CoordX() const;
+    const std::vector<double>& get_CoordY() const;
+    const std::vector<double>& get_CoordZ() const;
+    const std::vector<std::array<int,3>>& get_Triangles() const;
 
 
 
