@@ -4,8 +4,7 @@
 #include <iostream>
 #include <limits>
 #include <fstream>
-#include <iostream>
-#include <cmath>
+#include <omp.h>
 
 FlowSolver::FlowSolver(const MeshCompute& mesh,
                        const EulerPhysics& physics)
@@ -26,6 +25,7 @@ FlowSolver::FlowSolver(const MeshCompute& mesh,
 
 void FlowSolver::initialize_solution(const std::array<double,4>& W0)
 {
+    #pragma omp parallel for
     for (int i = 0; i < ncells_; i++)
     {
         W_[i] = W0;
@@ -46,6 +46,7 @@ void FlowSolver::initialize_freestream(double rho_inf,
 
 void FlowSolver::reset_residual()
 {
+    #pragma omp parallel for
     for (int i = 0; i < ncells_; i++)
     {
         residual_[i][0] = 0.0;
@@ -66,7 +67,7 @@ void FlowSolver::compute_residual()
     const auto& faces_bc_type  = mesh_.get_faces_bc_type();
 
     const int nfaces = static_cast<int>(faces_cells.size());
-
+    #pragma omp parallel for
     for (int f = 0; f < nfaces; f++)
     {
         int left  = faces_cells[f][0];
@@ -84,7 +85,9 @@ void FlowSolver::compute_residual()
 
             for (int k = 0; k < 4; k++)
             {
+                #pragma omp atomic
                 residual_[left][k]  += flux[k];
+                #pragma omp atomic
                 residual_[right][k] -= flux[k];
             }
         }
@@ -107,6 +110,7 @@ void FlowSolver::compute_residual()
 
             for (int k = 0; k < 4; k++)
             {
+                #pragma omp atomic
                 residual_[left][k] += flux[k];
             }
         }
@@ -125,7 +129,7 @@ void FlowSolver::compute_local_dt(double cfl)
     std::vector<double> spectral_sum(ncells_, 0.0);
 
     const int nfaces = static_cast<int>(faces_cells.size());
-
+    #pragma omp parallel for
     for (int f = 0; f < nfaces; f++)
     {
         int left  = faces_cells[f][0];
@@ -146,8 +150,9 @@ void FlowSolver::compute_local_dt(double cfl)
             double aR  = physics_.sound_speed(W_[right]);
 
             double lambda = std::max(unL + aL, unR + aR) * Sf;
-
+            #pragma omp atomic
             spectral_sum[left]  += lambda;
+            #pragma omp atomic
             spectral_sum[right] += lambda;
         }
         else
@@ -156,6 +161,7 @@ void FlowSolver::compute_local_dt(double cfl)
 
             if (bc == 1)
             {
+                #pragma omp atomic
                 spectral_sum[left] += (unL + aL) * Sf;
             }
             else if (bc == 2)
@@ -165,11 +171,12 @@ void FlowSolver::compute_local_dt(double cfl)
                 double aInf  = physics_.sound_speed(W_inf_);
 
                 double lambda = std::max(unL + aL, unInf + aInf) * Sf;
+                #pragma omp atomic
                 spectral_sum[left] += lambda;
             }
         }
     }
-
+    #pragma omp parallel for
     for (int i = 0; i < ncells_; i++)
     {
         if (spectral_sum[i] > 1.0e-14)
@@ -186,7 +193,7 @@ void FlowSolver::compute_local_dt(double cfl)
 void FlowSolver::update_solution_explicit()
 {
     const auto& cells_area = mesh_.get_cells_area();
-
+    #pragma omp parallel for
     for (int i = 0; i < ncells_; i++)
     {
         double cell_area = cells_area[i];
@@ -200,6 +207,7 @@ void FlowSolver::update_solution_explicit()
 
 void FlowSolver::set_uniform_dt(double dt_value)
 {
+    #pragma omp parallel for
     for (int i = 0; i < ncells_; i++)
     {
         dt_[i] = dt_value;
@@ -212,7 +220,7 @@ double FlowSolver::compute_residual_norm() const
 
     double sum = 0.0;
     double total_volume = 0.0;
-
+    #pragma omp parallel for
     for (int i = 0; i < ncells_; i++)
     {
         sum += residual_[i][0] * residual_[i][0] * area[i];
@@ -228,7 +236,7 @@ double FlowSolver::compute_residual_norm() const
 double FlowSolver::compute_residual_max_norm() const
 {
     double max_res = 0.0;
-
+    #pragma omp parallel for
     for (int i = 0; i < ncells_; i++)
     {
         max_res = std::max(max_res, std::abs(residual_[i][0]));
@@ -240,7 +248,7 @@ double FlowSolver::compute_residual_max_norm() const
 double FlowSolver::compute_residual_l2_raw() const
 {
     double sum = 0.0;
-
+    #pragma omp parallel for
     for (int i = 0; i < ncells_; i++)
     {
         sum += residual_[i][0] * residual_[i][0];

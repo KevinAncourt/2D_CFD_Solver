@@ -2,3 +2,9 @@ build/*
 .vscode/*
 *.log
 output/*
+*/*.vtk
+*.vtu
+*.pvtu
+*.out
+*.dat
+*.csv

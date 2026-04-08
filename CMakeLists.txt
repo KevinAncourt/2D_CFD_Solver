@@ -24,6 +24,9 @@ file(GLOB_RECURSE SOURCES CONFIGURE_DEPENDS
 # Exécutable
 add_executable(solver ${SOURCES})
 
+find_package(OpenMP REQUIRED)
+target_link_libraries(solver PRIVATE OpenMP::OpenMP_CXX)
+
 # Includes
 target_include_directories(solver PRIVATE
     ${PROJECT_SOURCE_DIR}/include

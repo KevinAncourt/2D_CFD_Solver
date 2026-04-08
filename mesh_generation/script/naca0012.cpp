@@ -153,8 +153,10 @@ int main()
         {1.0000000, -0.0012600}
     };
 
-    const double lcWall = 0.01;
-    const double lcFar  = 1.0;
+    // const double lcWall = 0.01;
+    // const double lcFar  = 1.0;
+    const double lcWall = 0.0001;
+    const double lcFar  = 0.5;
     const double R      = 150.0;
 
     // -----------------------------

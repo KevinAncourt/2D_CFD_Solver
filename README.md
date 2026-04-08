@@ -152,68 +152,28 @@ Typical fields: - Density - Pressure - Velocity - Mach number
 ### Solution (Mach number)
 
 <p align="center">
-  <img src="M1_5_AOA_1_CFL0_1/Naca12.png" width="300"/>
+  <img src="M1_5_AOA_1_CFL0_5/Naca12.png" width="300"/>
 </p>
 
 ### Residual history
 
 <p align="center">
-  <img src="M1_5_AOA_1_CFL0_1/residus.png" width="300"/>
+  <img src="M1_5_AOA_1_CFL0_5/residus.png" width="300"/>
 </p>
 
 ------------------------------------------------------------------------
 
-## ⚠️ Numerical Behavior
+## ⚠️ Numerical Behavior (Mach 1.5, AoA = 1°, CFL = 0.5)
 
-For the supersonic test case ($M_\infty = 1.5$, AoA = $1^\circ$), the solver produces a qualitatively reasonable compressible flow field around the airfoil.
+The solution exhibits the main qualitative features expected for a supersonic flow around an airfoil.  
+A pronounced low-Mach stagnation region appears near the leading edge, while two oblique downstream structures are clearly visible above and below the profile. These patterns are consistent with compressible wave propagation in a supersonic regime.
 
-From the present results, the following observations can be made:
+The wake and expansion/compression regions are captured globally, but the flow features remain relatively smooth and diffuse. In particular, the discontinuities are not sharply resolved, which indicates a noticeable amount of numerical diffusion. This is consistent with the use of a first-order robust finite-volume framework and explains why the shock-like structures appear spread over several cells instead of being captured as thin, crisp fronts.
 
-- A strong perturbation is visible near the leading edge, consistent with the expected supersonic compression effects.
-- The downstream flow structure is captured qualitatively, but compressible features remain broadly smeared.
-- No sharp shock is clearly resolved in the Mach contours, which indicates significant numerical diffusion.
-- This behavior is expected from the current **first-order finite-volume formulation** combined with a **Rusanov flux**, which is robust but strongly diffusive.
-- The current mesh is sufficient to recover the global flow pattern, but it is likely too coarse to capture thin shock structures accurately with the present scheme.
-- The residual decreases overall, which indicates a stable evolution toward a steady state, but convergence remains relatively slow.
+The residual history shows a non-monotonic convergence behavior. After an initial decrease, the residual enters a long phase of oscillations and gradual growth, with a marked bump before the final convergence. This suggests that the iterative process goes through a transient reorganization of the flow field before settling to a steady state. Despite this intermediate loss of monotonicity, the computation eventually converges to a very low residual level, indicating that a steady numerical solution is reached.
 
-These results should therefore be interpreted as **prototype-level numerical experiments**:
-the solver captures the main qualitative behavior of the flow, but the solution is not yet suitable for high-fidelity shock resolution or quantitative aerodynamic prediction.
+Overall, this test case shows that the solver is able to recover the main supersonic flow topology at \( M_\infty = 1.5 \) and \( \alpha = 1^\circ \), but also highlights the current limitations in shock resolution due to numerical diffusion.
 
-Typical sources of limitation at this stage are:
-- first-order spatial accuracy,
-- diffusive Rusanov flux,
-- moderate mesh resolution near compressible structures,
-- simplified boundary-condition treatment.
-
-
-------------------------------------------------------------------------
-
-## 📈 Example Results (Minf = 0.5, CFL = 0.001)
-
-
-
-### Solution (Mach number)
-
-<p align="center">
-  <img src="M0_5_CFL0_001/Naca12.png" width="300"/>
-</p>
-
-### Residual history
-
-<p align="center">
-  <img src="M0_5_CFL0_001/residus.png" width="300"/>
-</p>
-
-------------------------------------------------------------------------
-
-## ⚠️ Numerical Behavior
-
--   Residuals decrease initially
--   A minimum is reached
--   Then a slight increase appears
-
-This is typical for: - First-order scheme - Rusanov flux (diffusive) -
-Simplified farfield BC
 
 
 
