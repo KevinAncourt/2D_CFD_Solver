@@ -201,7 +201,10 @@ Simplified farfield BC
 ## 👨‍🔬 Author
 
 Kevin Ancourt\
-PhD in Computational Fluid Dynamics
+PhD in Computational Fluid Dynamics 
+
+📄 **PhD Thesis (French)**:  
+[Analyse et mise en œuvre d'une méthode de raffinement de maillage ciblé pour les écoulements compressibles](https://theses.hal.science/tel-05480104)
 
 Specialized in: - Adjoint methods - Goal-oriented mesh adaptation -
 High-performance scientific computing
