@@ -144,22 +144,21 @@ Typical fields: - Density - Pressure - Velocity - Mach number
 
 ### Mesh
 
-```{=html}
 <p align="center">
-```
-`<img src="images/mesh.png" width="600">`{=html}
-```{=html}
+  <img src="M0_5_CFL0_001/mesh.png" width="300"/>
 </p>
-```
+
+
 ### Solution (Mach number)
 
 <p align="center">
-  <img src="M0_5_CFL0_001/Naca12.png" width="600"/>
+  <img src="M0_5_CFL0_001/Naca12.png" width="300"/>
 </p>
+
 ### Residual history
 
 <p align="center">
-  <img src="M0_5_CFL0_001/residus.png" width="600"/>
+  <img src="M0_5_CFL0_001/residus.png" width="300"/>
 </p>
 
 ------------------------------------------------------------------------
