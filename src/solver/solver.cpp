@@ -217,26 +217,25 @@ void FlowSolver::set_uniform_dt(double dt_value)
 double FlowSolver::compute_residual_norm() const
 {
     const auto& area = mesh_.get_cells_area();
-
     double sum = 0.0;
     double total_volume = 0.0;
-    #pragma omp parallel for
+
+    #pragma omp parallel for reduction(+:sum,total_volume)
     for (int i = 0; i < ncells_; i++)
     {
         sum += residual_[i][0] * residual_[i][0] * area[i];
         total_volume += area[i];
     }
 
-    if (total_volume == 0.0)
-        return 0.0;
-
+    if (total_volume == 0.0) return 0.0;
     return std::sqrt(sum / total_volume);
 }
 
 double FlowSolver::compute_residual_max_norm() const
 {
     double max_res = 0.0;
-    #pragma omp parallel for
+
+    #pragma omp parallel for reduction(max:max_res)
     for (int i = 0; i < ncells_; i++)
     {
         max_res = std::max(max_res, std::abs(residual_[i][0]));
@@ -248,7 +247,8 @@ double FlowSolver::compute_residual_max_norm() const
 double FlowSolver::compute_residual_l2_raw() const
 {
     double sum = 0.0;
-    #pragma omp parallel for
+
+    #pragma omp parallel for reduction(+:sum)
     for (int i = 0; i < ncells_; i++)
     {
         sum += residual_[i][0] * residual_[i][0];
@@ -256,7 +256,6 @@ double FlowSolver::compute_residual_l2_raw() const
 
     return std::sqrt(sum);
 }
-
 
 void FlowSolver::run_explicit(int niter, double cfl, double tol)
 {

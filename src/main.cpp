@@ -27,8 +27,8 @@ int main()
 
     // Adimensional freestream state
     double gamma = 1.4;
-    double mach  = 0.5;
-    double alpha_deg = 0.0;
+    double mach  = 1.5;
+    double alpha_deg = 1.0;
     double alpha = alpha_deg * M_PI / 180.0;
     double rho_inf = 1.0;
     double u_inf   = std::cos(alpha);
