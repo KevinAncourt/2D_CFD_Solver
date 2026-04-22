@@ -66,53 +66,75 @@ void FlowSolver::compute_residual()
     const auto& faces_length   = mesh_.get_faces_length();
     const auto& faces_bc_type  = mesh_.get_faces_bc_type();
 
-    const int nfaces = static_cast<int>(faces_cells.size());
-    #pragma omp parallel for
-    for (int f = 0; f < nfaces; f++)
+    const int nfaces   = static_cast<int>(faces_cells.size());
+    const int nthreads = omp_get_max_threads();
+
+    std::vector<std::vector<std::array<double,4>>> residual_private(
+        nthreads,
+        std::vector<std::array<double,4>>(ncells_, {0.0, 0.0, 0.0, 0.0})
+    );
+
+    #pragma omp parallel
     {
-        int left  = faces_cells[f][0];
-        int right = faces_cells[f][1];
+        const int tid = omp_get_thread_num();
+        auto& residual_loc = residual_private[tid];
 
-        double nx = faces_normal_x[f];
-        double ny = faces_normal_y[f];
-        double Sf = faces_length[f];
-
-        std::array<double,4> flux = {0.0, 0.0, 0.0, 0.0};
-
-        if (right != -1)
+        #pragma omp for
+        for (int f = 0; f < nfaces; ++f)
         {
-            flux = rusanov_flux_.compute(W_[left], W_[right], nx, ny, Sf);
+            const int left  = faces_cells[f][0];
+            const int right = faces_cells[f][1];
 
-            for (int k = 0; k < 4; k++)
-            {
-                #pragma omp atomic
-                residual_[left][k]  += flux[k];
-                #pragma omp atomic
-                residual_[right][k] -= flux[k];
-            }
-        }
-        else
-        {
-            int bc = faces_bc_type[f];
+            const double nx = faces_normal_x[f];
+            const double ny = faces_normal_y[f];
+            const double Sf = faces_length[f];
 
-            if (bc == 1)
+            std::array<double,4> flux = {0.0, 0.0, 0.0, 0.0};
+
+            if (right != -1)
             {
-                flux = boundary_conditions_.wall_flux(W_[left], nx, ny, Sf);
-            }
-            else if (bc == 2)
-            {
-                flux = boundary_conditions_.farfield_flux(W_[left], nx, ny, Sf);
+                flux = rusanov_flux_.compute(W_[left], W_[right], nx, ny, Sf);
+
+                for (int k = 0; k < 4; ++k)
+                {
+                    residual_loc[left][k]  += flux[k];
+                    residual_loc[right][k] -= flux[k];
+                }
             }
             else
             {
-                continue;
-            }
+                const int bc = faces_bc_type[f];
 
-            for (int k = 0; k < 4; k++)
-            {
-                #pragma omp atomic
-                residual_[left][k] += flux[k];
+                if (bc == 1)
+                {
+                    flux = boundary_conditions_.wall_flux(W_[left], nx, ny, Sf);
+                }
+                else if (bc == 2)
+                {
+                    flux = boundary_conditions_.farfield_flux(W_[left], nx, ny, Sf);
+                }
+                else
+                {
+                    continue;
+                }
+
+                for (int k = 0; k < 4; ++k)
+                {
+                    residual_loc[left][k] += flux[k];
+                }
             }
+        }
+    }
+
+    #pragma omp parallel for
+    for (int i = 0; i < ncells_; ++i)
+    {
+        for (int t = 0; t < nthreads; ++t)
+        {
+            residual_[i][0] += residual_private[t][i][0];
+            residual_[i][1] += residual_private[t][i][1];
+            residual_[i][2] += residual_private[t][i][2];
+            residual_[i][3] += residual_private[t][i][3];
         }
     }
 }
